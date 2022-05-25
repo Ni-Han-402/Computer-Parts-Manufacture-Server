@@ -22,6 +22,7 @@ async function run() {
     console.log("database connected");
     await client.connect();
     const partCollection = client.db("pc-house").collection("parts");
+    const orderCollection = client.db("pc-house").collection("order");
 
     // LOAD MULTIPLE DATA
     app.get("/part", async (req, res) => {
@@ -37,6 +38,13 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const part = await partCollection.findOne(query);
       res.send(part);
+    });
+
+    // Order Collection API
+    app.post("/order", async (req, res) => {
+      const order = req.body;
+      const result = orderCollection.insertOne(order);
+      res.send(result);
     });
   } finally {
   }
