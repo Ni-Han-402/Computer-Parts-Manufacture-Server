@@ -82,15 +82,32 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
+
+    // Admin Get Api
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+
     // User Put Api
     app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const filter = { email: email };
-      const updateDoc = {
-        $set: { role: "admin" },
-      };
-      const result = await userCollection.updateOne(filter, updateDoc);
-      res.send(result);
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        const filter = { email: email };
+        const updateDoc = {
+          $set: { role: "admin" },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } else {
+        res.status(403).send({ message: "Forbidden Access" });
+      }
     });
 
     app.put("/user/:email", async (req, res) => {
@@ -117,7 +134,7 @@ run().catch(console.dir);
 
 // root
 app.get("/", (req, res) => {
-  res.send("Hello PC House");
+  res.send("Hello PC House...Hi");
 });
 
 app.listen(port, () => {
