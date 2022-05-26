@@ -18,6 +18,22 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// Verify Token Function
+function verifyJWT(req, res, next) {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ message: "UnAuthorized Access" });
+  }
+  const token = authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     console.log("database connected");
@@ -48,14 +64,35 @@ async function run() {
       const result = orderCollection.insertOne(order);
       res.send(result);
     });
-    app.get("/order", async (req, res) => {
+    app.get("/order", verifyJWT, async (req, res) => {
       const email = req.query.email;
-      const query = { email: email };
-      const orders = await orderCollection.find(query).toArray();
-      res.send(orders);
+      const decodedEmail = req.decoded.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const orders = await orderCollection.find(query).toArray();
+        return res.send(orders);
+      } else {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
     });
 
     // USER COLLECTION API
+    // User Get Api
+    app.get("/users", verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+    // User Put Api
+    // app.put("/user/admin/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const filter = { email: email };
+    //   const updateDoc = {
+    //     $set: { role: "admin" },
+    //   };
+    //   const result = await userCollection.updateOne(filter, updateDoc);
+    //   res.send(result);
+    // });
+
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
