@@ -79,6 +79,13 @@ async function run() {
       const parts = await partCollection.deleteOne(query);
       res.send(parts);
     });
+    // DELETE ORDERS API
+    app.delete("/orders/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const orders = await orderCollection.deleteOne(query);
+      res.send(order);
+    });
 
     // LOAD SINGLE DATA
     app.get("/part/:id", async (req, res) => {
