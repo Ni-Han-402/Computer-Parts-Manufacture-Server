@@ -84,7 +84,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const orders = await orderCollection.deleteOne(query);
-      res.send(order);
+      res.send(orders);
     });
 
     // LOAD SINGLE DATA
