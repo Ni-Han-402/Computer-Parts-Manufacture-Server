@@ -63,7 +63,7 @@ async function run() {
       res.send(parts);
     });
     // LOAD MANAGE PRODUCTS API
-    app.get("/part", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/part", verifyJWT, async (req, res) => {
       const parts = await partCollection.find().toArray();
       res.send(parts);
     });
