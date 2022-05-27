@@ -90,7 +90,7 @@ async function run() {
     app.delete("/user/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
-      const user = await orderCollection.deleteOne(query);
+      const user = await userCollection.deleteOne(query);
       res.send(user);
     });
 
