@@ -107,6 +107,12 @@ async function run() {
       }
     });
 
+    // LOAD MANAGE PRODUCTS API
+    app.get("/order", verifyJWT, verifyAdmin, async (req, res) => {
+      const orders = await orderCollection.find().toArray();
+      res.send(orders);
+    });
+
     // USER COLLECTION API
     // User Get Api
     app.get("/user", verifyJWT, async (req, res) => {
