@@ -67,6 +67,11 @@ async function run() {
       const parts = await partCollection.find().toArray();
       res.send(parts);
     });
+    // LOAD ORDERS PRODUCTS API
+    app.get("/orders", verifyJWT, async (req, res) => {
+      const orders = await orderCollection.find().toArray();
+      res.send(orders);
+    });
     // DELETE PRODUCTS API
     app.delete("/part/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
@@ -105,12 +110,6 @@ async function run() {
       } else {
         return res.status(403).send({ message: "Forbidden Access" });
       }
-    });
-
-    // LOAD MANAGE PRODUCTS API
-    app.get("/order", verifyJWT, verifyAdmin, async (req, res) => {
-      const orders = await orderCollection.find().toArray();
-      res.send(orders);
     });
 
     // USER COLLECTION API
