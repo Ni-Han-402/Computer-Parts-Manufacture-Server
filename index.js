@@ -142,10 +142,6 @@ async function run() {
     });
 
     // Profile Collection API
-    app.get("/profile", verifyJWT, async (req, res) => {
-      const profile = await profileCollection.find().toArray();
-      res.send(profile);
-    });
     // LOAD SINGLE DATA
     app.get("/profile/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
