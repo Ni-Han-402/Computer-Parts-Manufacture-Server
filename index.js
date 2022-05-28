@@ -3,6 +3,7 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -42,6 +43,8 @@ async function run() {
     const orderCollection = client.db("pc-house").collection("order");
     const userCollection = client.db("pc-house").collection("user");
     const reviewCollection = client.db("pc-house").collection("review");
+    const paymentCollection = client.db("pc-house").collection("payment");
+    const profileCollection = client.db("pc-house").collection("profile");
 
     // Verify Admin Function
     const verifyAdmin = async (req, res, next) => {
@@ -55,6 +58,22 @@ async function run() {
         res.status(403).send({ message: "Forbidden Access" });
       }
     };
+
+    // Payment
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
     // LOAD MULTIPLE DATA FOR PART
     app.get("/part", async (req, res) => {
@@ -122,6 +141,23 @@ async function run() {
       res.send(reviews);
     });
 
+    // Profile Collection API
+    app.get("/profile", verifyJWT, async (req, res) => {
+      const profile = await profileCollection.find().toArray();
+      res.send(profile);
+    });
+    // LOAD SINGLE DATA
+    app.get("/profile/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const profile = await profileCollection.findOne(query);
+      res.send(profile);
+    });
+    app.post("/profile", verifyJWT, async (req, res) => {
+      const profile = req.body;
+      const result = profileCollection.insertOne(profile);
+      res.send(result);
+    });
     // Order Collection API
     app.post("/order", async (req, res) => {
       const order = req.body;
@@ -138,6 +174,28 @@ async function run() {
       } else {
         return res.status(403).send({ message: "Forbidden Access" });
       }
+    });
+
+    app.patch("/order/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const result = await paymentCollection.insertOne(payment);
+      const updatedOrder = await orderCollection.updateOne(filter, updateDoc);
+
+      res.send(updateDoc);
+    });
+
+    app.get("/order/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const order = await orderCollection.findOne(query);
+      res.send(order);
     });
 
     // USER COLLECTION API
