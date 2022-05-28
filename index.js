@@ -41,6 +41,7 @@ async function run() {
     const partCollection = client.db("pc-house").collection("parts");
     const orderCollection = client.db("pc-house").collection("order");
     const userCollection = client.db("pc-house").collection("user");
+    const reviewCollection = client.db("pc-house").collection("review");
 
     // Verify Admin Function
     const verifyAdmin = async (req, res, next) => {
@@ -55,12 +56,19 @@ async function run() {
       }
     };
 
-    // LOAD MULTIPLE DATA
+    // LOAD MULTIPLE DATA FOR PART
     app.get("/part", async (req, res) => {
       const query = {};
       const cursor = partCollection.find(query);
       const parts = await cursor.toArray();
       res.send(parts);
+    });
+    // LOAD MULTIPLE DATA FOR REVIEWS
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
     });
     // LOAD MANAGE PRODUCTS API
     app.get("/part", verifyJWT, async (req, res) => {
@@ -87,7 +95,7 @@ async function run() {
       res.send(orders);
     });
     // DELETE USERS API
-    app.delete("/user/:id", verifyJWT, verifyAdmin, async (req, res) => {
+    app.delete("/user/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const user = await userCollection.deleteOne(query);
@@ -106,6 +114,12 @@ async function run() {
       const part = req.body;
       const result = partCollection.insertOne(part);
       res.send(result);
+    });
+    // POST DATA FOR REVIEWS
+    app.post("/review", verifyJWT, async (req, res) => {
+      const review = req.body;
+      const reviews = reviewCollection.insertOne(review);
+      res.send(reviews);
     });
 
     // Order Collection API
@@ -165,7 +179,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "12d" }
       );
       res.send({ result, token });
     });
